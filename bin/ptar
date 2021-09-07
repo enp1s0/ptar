@@ -21,7 +21,7 @@ echo "$num_files files are found"
 
 echo "Archiving in parallel..."
 ptar_path=$(cd $(dirname $0); pwd)/../
-mpirun -np $num_procs --oversubscribe -x ptar_temp_dir=$ptar_temp_dir $ptar_path/detail/ptar-dist.sh $file_list_filename
+mpirun -np $num_procs --oversubscribe -x ptar_temp_dir=$ptar_temp_dir $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
 
 # Concatinate
 cat_command="tar --concatenate --file="
