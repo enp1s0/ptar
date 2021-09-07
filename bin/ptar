@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if [ $# -ne 3 ];then
+	echo "Usage $0 [num threads] [target dir] [dst file]"
+	exit 0
+fi
+
+export ptar_temp_dir=/tmp/ptar
+num_procs=$1
+target_dir=$2
+dest_file=$3
+
+rm -rf $ptar_temp_dir
+mkdir -p $ptar_temp_dir
+
+echo "Creating file list..."
+file_list_filename=$ptar_temp_dir/file_list
+find $target_dir -type f >$file_list_filename
+num_files=$(cat $file_list_filename | wc -l)
+echo "$num_files files are found"
+
+echo "Archiving in parallel..."
+ptar_path=$(cd $(dirname $0); pwd)/../
+mpirun -np $num_procs --oversubscribe -x ptar_temp_dir=$ptar_temp_dir $ptar_path/detail/ptar-dist.sh $file_list_filename
+
+# Concatinate
+cat_command="tar --concatenate --file="
+for i in $(seq 0 $(($num_procs-1)));do
+	cat_command="${cat_command}${ptar_temp_dir}/ptar-$i.tar "
+done
+
+echo "Concarenating..."
+$cat_command
+
+echo "Copying from temp dir to the dest dir..."
+mv $ptar_temp_dir/ptar-0.tar $dest_file
+
+# clean temp directory
+echo "Cleaning tmp dir..."
+rm -rf $ptar_temp_dir
