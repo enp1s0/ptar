@@ -5,37 +5,43 @@ if [ $# -ne 4 ];then
 	exit 1
 fi
 
-export ptar_temp_dir=/groups/gca50014/ootomoh/tmp
+if [ -z "$PTAR_TEMP_DIR" ]; then
+	echo "Temp dir for ptar has not been defined."
+	echo "Set an environment variable PTAR_TEMP_DIR"
+	exit 1
+fi
+
+export PTAR_TEMP_DIR=/groups/gca50014/ootomoh/tmp
 num_procs=$1
 num_procs_per_node=$2
 target_dir=$3
 dest_file=$4
 
-rm -rf $ptar_temp_dir
-mkdir -p $ptar_temp_dir
+rm -rf $PTAR_TEMP_DIR
+mkdir -p $PTAR_TEMP_DIR
 
 echo "Creating file list..."
-file_list_filename=$ptar_temp_dir/file_list
+file_list_filename=$PTAR_TEMP_DIR/file_list
 find $target_dir -type f >$file_list_filename
 num_files=$(cat $file_list_filename | wc -l)
 echo "$num_files files are found"
 
 echo "Archiving ..."
 ptar_path=$(cd $(dirname $0); pwd)/../
-mpirun -np $num_procs -npernode $num_threads_per_node --oversubscribe -x ptar_temp_dir=$ptar_temp_dir $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
+mpirun -np $num_procs -npernode $num_threads_per_node --oversubscribe -x ptar_temp_dir=$PTAR_TEMP_DIR $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
 
 # Concatinate
 cat_command="tar --concatenate --file="
 for i in $(seq 0 $(($num_procs-1)));do
-	cat_command="${cat_command}${ptar_temp_dir}/ptar-$i.tar "
+	cat_command="${cat_command}${PTAR_TEMP_DIR}/ptar-$i.tar "
 done
 
 echo "Concarenating..."
 $cat_command
 
 echo "Copying from temp dir to the dest dir..."
-mv $ptar_temp_dir/ptar-0.tar $dest_file
+mv $PTAR_TEMP_DIR/ptar-0.tar $dest_file
 
 # clean temp directory
 echo "Cleaning tmp dir..."
-rm -rf $ptar_temp_dir
+rm -rf $PTAR_TEMP_DIR
