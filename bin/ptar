@@ -27,7 +27,7 @@ echo "$num_files files are found"
 
 echo "Archiving ..."
 ptar_path=$(cd $(dirname $0); pwd)/../
-mpirun -np $num_procs -npernode $num_threads_per_node --oversubscribe -x ptar_temp_dir=$PTAR_TEMP_DIR $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
+mpirun -np $num_procs -npernode $num_procs_per_node --oversubscribe -x ptar_temp_dir=$PTAR_TEMP_DIR $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
 
 # Concatinate
 cat_command="tar --concatenate --file="
