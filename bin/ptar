@@ -1,14 +1,15 @@
 #!/bin/bash
 
-if [ $# -ne 3 ];then
-	echo "Usage $0 [num threads] [target dir] [dst file]"
-	exit 0
+if [ $# -ne 4 ];then
+	echo "Usage $0 [num threads] [num threads per node] [target dir] [dst file]"
+	exit 1
 fi
 
-export ptar_temp_dir=/tmp/ptar
+export ptar_temp_dir=/groups/gca50014/ootomoh/tmp
 num_procs=$1
-target_dir=$2
-dest_file=$3
+num_procs_per_node=$2
+target_dir=$3
+dest_file=$4
 
 rm -rf $ptar_temp_dir
 mkdir -p $ptar_temp_dir
@@ -19,9 +20,9 @@ find $target_dir -type f >$file_list_filename
 num_files=$(cat $file_list_filename | wc -l)
 echo "$num_files files are found"
 
-echo "Archiving in parallel..."
+echo "Archiving ..."
 ptar_path=$(cd $(dirname $0); pwd)/../
-mpirun -np $num_procs --oversubscribe -x ptar_temp_dir=$ptar_temp_dir $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
+mpirun -np $num_procs -npernode $num_threads_per_node --oversubscribe -x ptar_temp_dir=$ptar_temp_dir $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
 
 # Concatinate
 cat_command="tar --concatenate --file="
