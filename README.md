@@ -13,6 +13,14 @@ Gen whole list ->      +--------- tar list.3 -----------+ -> Conratenate (dst.ta
                     |================ MPI ================|
 ```
 
+## How to use
+```bash
+./bin/ptar [num_procs] [num_procs_per_node] [src_dir] [dst_path.tar]
+
+# e.g. 4 nodes 32 procs
+./bin/ptar 32 8 /nfs/shared/dataset/poi/ $HOME/poi.tar
+```
+
 ## Requirements
 
 - tar
