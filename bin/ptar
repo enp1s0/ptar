@@ -15,32 +15,33 @@ num_procs=$1
 num_procs_per_node=$2
 target_dir=$3
 dest_file=$4
+par_tmp_subdir=$PTAR_TEMP_DIR/ptar
 
-rm -rf $PTAR_TEMP_DIR
-mkdir -p $PTAR_TEMP_DIR
+rm -rf $par_tmp_subdir
+mkdir -p $par_tmp_subdir
 
 echo "Creating file list..."
-file_list_filename=$PTAR_TEMP_DIR/file_list
+file_list_filename=$par_tmp_subdir/file_list
 find $target_dir -type f >$file_list_filename
 num_files=$(cat $file_list_filename | wc -l)
 echo "$num_files files are found"
 
 echo "Archiving ..."
 ptar_path=$(cd $(dirname $0); pwd)/../
-mpirun -np $num_procs -npernode $num_procs_per_node --oversubscribe -x ptar_temp_dir=$PTAR_TEMP_DIR $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
+mpirun -np $num_procs -npernode $num_procs_per_node --oversubscribe -x ptar_temp_dir=$par_tmp_subdir $ptar_path/bin/detail/ptar-dist.sh $file_list_filename
 
 # Concatinate
 cat_command="tar --concatenate --file="
 for i in $(seq 0 $(($num_procs-1)));do
-	cat_command="${cat_command}${PTAR_TEMP_DIR}/ptar-$i.tar "
+	cat_command="${cat_command}${par_tmp_subdir}/ptar-$i.tar "
 done
 
 echo "Concarenating..."
 $cat_command
 
 echo "Copying from temp dir to the dest dir..."
-mv $PTAR_TEMP_DIR/ptar-0.tar $dest_file
+mv $par_tmp_subdir/ptar-0.tar $dest_file
 
 # clean temp directory
 echo "Cleaning tmp dir..."
-rm -rf $PTAR_TEMP_DIR
+rm -rf $par_tmp_subdir
